@@ -1,5 +1,3 @@
-require_relative "registry"
-
 module PubSub
   def self.publisher
     Module.new do
