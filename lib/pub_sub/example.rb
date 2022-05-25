@@ -53,5 +53,10 @@ module PubSub
 
     TestModel.new.broadcast_test_event # ["on(TestEvent)", "this is payload 1"]
     TestModel.new.broadcast_test_event_2 # ["on_unhandled_event", "this is payload 2"]
+
+    TestModel.remove_subscriber(TestLogger.instance)
+
+    TestModel.new.broadcast_test_event # nothing happens
+    TestModel.new.broadcast_test_event_2 # nothing happens
   end
 end

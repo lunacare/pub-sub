@@ -3,7 +3,7 @@ require_relative "base_event.rb"
 module PubSub
   module Subscriber
     def self.included(base)
-      base.class.define_method :on do |event_class, &block|
+      base.class.define_method :on do |event_class, &block|        
         base.define_method "on_#{event_class.name}" do |event|
           block.call(event)
         end

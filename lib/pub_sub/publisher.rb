@@ -6,7 +6,7 @@ module PubSub
     end
 
     def remove_subscribers(*subscribers_to_remove)
-      subscribers.subtract(subscribers_to_add)
+      subscribers.subtract(subscribers_to_remove)
       nil
     end
 
