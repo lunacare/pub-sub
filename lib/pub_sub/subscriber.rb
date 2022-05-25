@@ -6,6 +6,7 @@ module PubSub
       def base.event_handlers
         @event_handlers ||= {}
       end
+
       def base.on(*event_classes, &block)
         event_classes.each do |event_class|
           event_handlers[event_class] = block

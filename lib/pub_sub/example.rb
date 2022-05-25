@@ -5,32 +5,24 @@ require_relative "bus.rb"
 require_relative "publisher.rb"
 require_relative "class_forwarding.rb"
 require_relative "base_event.rb"
+require_relative "plugins/sidekiq"
 
 module PubSub
   module Example
-    class TestEvent < PubSub::BaseEvent
-      def self.name
-        "test_event"
-      end
+    class TestEvent1 < PubSub::BaseEvent
     end
 
     class TestEvent2 < PubSub::BaseEvent
-      def self.name
-        "test_event_2"
-      end
     end
 
     class TestEvent3 < PubSub::BaseEvent
-      def self.name
-        "test_event_3"
-      end
     end
 
     class TestLogger
       include Singleton
       include PubSub::Subscriber
 
-      on(TestEvent, TestEvent3) do |event|
+      on(TestEvent1, TestEvent3) do |event|
         p var
         p ["on(TestEvent)", event.payload]
       end
@@ -51,11 +43,12 @@ module PubSub
 
     class TestModel
       extend PubSub::ActiveRecord::Model
+      include PubSub::Plugins::Sidekiq
 
       add_subscriber(TestLogger.instance)
 
-      def broadcast_test_event
-        broadcast(TestEvent.new("this is payload 1"))
+      def broadcast_test_event_1
+        broadcast(TestEvent1.new("this is payload 1"))
       end
 
       def broadcast_test_event_2
@@ -68,13 +61,13 @@ module PubSub
     end
 
     # all print "instance var", not "class var"
-    TestModel.new.broadcast_test_event # ["on(TestEvent)", "this is payload 1"]
+    TestModel.new.broadcast_test_event_1 # ["on(TestEvent)", "this is payload 1"]
     TestModel.new.broadcast_test_event_2 # ["on_unhandled_event", "this is payload 2"]
     TestModel.new.broadcast_test_event_3 # ["on(TestEvent)", "this is payload 3"]
 
     TestModel.remove_subscriber(TestLogger.instance)
 
-    TestModel.new.broadcast_test_event # nothing happens
+    TestModel.new.broadcast_test_event_1 # nothing happens
     TestModel.new.broadcast_test_event_2 # nothing happens
     TestModel.new.broadcast_test_event_3 # nothing happens
   end
