@@ -1,9 +1,8 @@
 module PubSub
   class Event
-    attr_accessor :name, :payload
+    attr_accessor :payload
 
-    def initialize(name, payload)
-      @name = name
+    def initialize(payload)
       @payload = payload
     end
   end
