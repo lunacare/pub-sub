@@ -4,8 +4,10 @@ require "yaml"
 module PubSub
   module Plugins
     module Sidekiq
+
       class Worker
         include ::Sidekiq::Worker
+        sidekiq_options retry: false
 
         def perform(yml)
           (subscriber, event) = ::YAML.unsafe_load(yml)
