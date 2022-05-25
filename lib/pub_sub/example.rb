@@ -31,11 +31,21 @@ module PubSub
       include PubSub::Subscriber
 
       on(TestEvent, TestEvent3) do |event|
+        p var
         p ["on(TestEvent)", event.payload]
       end
 
       def on_unhandled_event(event)
+        p var
         p ["on_unhandled_event", event.payload]
+      end
+
+      def var
+        "instance var"
+      end
+
+      def self.var
+        "class var"
       end
     end
 
@@ -57,9 +67,7 @@ module PubSub
       end
     end
 
-    # notice this won't double all the logs because it's the same instance
-    TestModel.add_subscriber(TestLogger.instance)
-
+    # all print "instance var", not "class var"
     TestModel.new.broadcast_test_event # ["on(TestEvent)", "this is payload 1"]
     TestModel.new.broadcast_test_event_2 # ["on_unhandled_event", "this is payload 2"]
     TestModel.new.broadcast_test_event_3 # ["on(TestEvent)", "this is payload 3"]
