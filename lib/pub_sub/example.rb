@@ -1,3 +1,5 @@
+require "singleton"
+
 require_relative "active_record/model.rb"
 require_relative "bus.rb"
 require_relative "publisher.rb"
@@ -18,19 +20,8 @@ module PubSub
       end
     end
 
-    class TestModel
-      extend PubSub::ActiveRecord::Model
-
-      def broadcast_test_event
-        broadcast(TestEvent.new("this is payload 1"))
-      end
-
-      def broadcast_test_event_2
-        broadcast(TestEvent2.new("this is payload 2"))
-      end
-    end
-
     class TestLogger
+      include Singleton
       include PubSub::Subscriber
 
       on(TestEvent) do |event|
@@ -42,7 +33,24 @@ module PubSub
       end
     end
 
-    TestModel.add_subscriber(TestLogger.new)
+    class TestModel
+      extend PubSub::ActiveRecord::Model
+
+      add_subscriber(TestLogger.instance)
+
+      def broadcast_test_event
+        broadcast(TestEvent.new("this is payload 1"))
+      end
+
+      def broadcast_test_event_2
+        broadcast(TestEvent2.new("this is payload 2"))
+      end
+
+    end
+
+    # notice this won't double all the logs because it's the same instance
+    TestModel.add_subscriber(TestLogger.instance)
+
     TestModel.new.broadcast_test_event # ["on(TestEvent)", "this is payload 1"]
     TestModel.new.broadcast_test_event_2 # ["on_unhandled_event", "this is payload 2"]
   end
