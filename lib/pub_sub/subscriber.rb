@@ -3,18 +3,24 @@ require_relative "base_event.rb"
 module PubSub
   module Subscriber
     def self.included(base)
-      base.class.define_method :on do |event_class, &block|        
-        base.define_method "on_#{event_class.name}" do |event|
-          block.call(event)
+      base.class.define_method :event_handlers do
+        @@event_handlers ||= {}
+      end
+
+      base.class.define_method :on do |*event_classes, &block|
+        event_classes.each do |event_class|
+          base.class.event_handlers[event_class] = block
         end
       end
     end
 
     def on_event(event)
-      if event.is_a?(PubSub::BaseEvent) && self.respond_to?("on_#{event.class.name}")
-        self.send("on_#{event.class.name}", event)
-      else
+      event_handler = self.class.event_handlers[event.class]
+
+      if event_handler.nil?
         on_unhandled_event(event)
+      else
+        event_handler.call(event)
       end
 
       nil
