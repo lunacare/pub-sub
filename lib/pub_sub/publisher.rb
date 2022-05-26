@@ -1,3 +1,5 @@
+require "set"
+
 module PubSub
   module Publisher
     def add_subscribers(*subscribers_to_add)
@@ -12,7 +14,8 @@ module PubSub
 
     alias :add_subscriber :add_subscribers
     alias :remove_subscriber :remove_subscribers
-    alias :yeet_subscriber :remove_subscriber
+    alias :yeet_subscribers :remove_subscribers
+    alias :yeet_subscriber :yeet_subscribers
 
     private
 
