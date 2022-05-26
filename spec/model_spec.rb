@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "singleton"
-
 RSpec.describe PubSub::ActiveRecord::Model do
   before(:example) do
     class TestModel
