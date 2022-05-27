@@ -1,8 +1,21 @@
 # frozen_string_literal: true
 
+require "active_record"
+
 RSpec.describe PubSub::ActiveRecord::Model do
+  ActiveRecord::Base.establish_connection(
+    adapter: 'sqlite3',
+    database: ':memory:'
+  )
+
+  ActiveRecord::Schema.define do
+    create_table :test_models, force: true do |t|
+      t.string :name
+    end
+  end
+
   before(:example) do
-    class TestModel
+    class TestModel < ActiveRecord::Base
       extend PubSub::ActiveRecord::Model
 
       def test_broadcast(...)
@@ -56,5 +69,68 @@ RSpec.describe PubSub::ActiveRecord::Model do
     @test_model_class.add_subscriber(@test_subscriber)
     @test_model_instance.test_broadcast("test")
     expect(@test_subscriber.received).to eq(["test"])
+  end
+
+  it "calls create callbacks" do
+    @test_model_class.add_subscriber(@test_subscriber)
+    @test_model_class.create!(name: "test")
+    expect(@test_subscriber.received.map { |event| event.class.name }).to eq([
+      "PubSub::ActiveRecord::Events::AfterInitializeEvent",
+      "PubSub::ActiveRecord::Events::BeforeValidationEvent",
+      "PubSub::ActiveRecord::Events::AfterValidationEvent",
+      "PubSub::ActiveRecord::Events::BeforeSaveEvent",
+      "PubSub::ActiveRecord::Events::BeforeCreateEvent",
+      "PubSub::ActiveRecord::Events::AfterCreateEvent",
+      "PubSub::ActiveRecord::Events::AfterSaveEvent",
+      "PubSub::ActiveRecord::Events::AfterCommitEvent",
+      "PubSub::ActiveRecord::Events::AfterCreateCommitEvent"
+    ])
+  end
+
+  it "calls update callbacks" do
+    instance = @test_model_class.create!(name: "test")
+    @test_model_class.add_subscriber(@test_subscriber)
+    instance.update!(name: "test2")
+    expect(@test_subscriber.received.map { |event| event.class.name }).to eq([
+      "PubSub::ActiveRecord::Events::BeforeValidationEvent",
+      "PubSub::ActiveRecord::Events::AfterValidationEvent",
+      "PubSub::ActiveRecord::Events::BeforeSaveEvent",
+      "PubSub::ActiveRecord::Events::BeforeUpdateEvent",
+      "PubSub::ActiveRecord::Events::AfterUpdateEvent",
+      "PubSub::ActiveRecord::Events::AfterSaveEvent",
+      "PubSub::ActiveRecord::Events::AfterCommitEvent",
+      "PubSub::ActiveRecord::Events::AfterUpdateCommitEvent"
+    ])
+  end
+
+  it "calls destroy callbacks" do
+    instance = @test_model_class.create!(name: "test")
+    @test_model_class.add_subscriber(@test_subscriber)
+    instance.destroy!
+    expect(@test_subscriber.received.map { |event| event.class.name }).to eq([
+      "PubSub::ActiveRecord::Events::BeforeDestroyEvent",
+      "PubSub::ActiveRecord::Events::AfterDestroyEvent",
+      "PubSub::ActiveRecord::Events::AfterCommitEvent",
+      "PubSub::ActiveRecord::Events::AfterDestroyCommitEvent"
+    ])
+  end
+
+  it "calls rollback callbacks" do
+    @test_model_class.add_subscriber(@test_subscriber)
+    @test_model_class.transaction do
+      @test_model_class.create!(name: "test")
+      raise ActiveRecord::Rollback
+    end
+    expect(@test_subscriber.received.map { |event| event.class.name }).to eq([
+      "PubSub::ActiveRecord::Events::AfterInitializeEvent",
+      "PubSub::ActiveRecord::Events::BeforeValidationEvent",
+      "PubSub::ActiveRecord::Events::AfterValidationEvent",
+      "PubSub::ActiveRecord::Events::BeforeSaveEvent",
+      "PubSub::ActiveRecord::Events::BeforeCreateEvent",
+      "PubSub::ActiveRecord::Events::AfterCreateEvent",
+      "PubSub::ActiveRecord::Events::AfterSaveEvent",
+      "PubSub::ActiveRecord::Events::AfterRollbackEvent",
+      "PubSub::ActiveRecord::Events::AfterCreateRollbackEvent"
+    ])
   end
 end

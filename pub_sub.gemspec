@@ -28,4 +28,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "sidekiq"
+  spec.add_dependency "activerecord"
+  spec.add_development_dependency "sqlite3"
 end
