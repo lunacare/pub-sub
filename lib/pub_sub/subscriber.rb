@@ -1,22 +1,62 @@
-require_relative "registry"
+require_relative "base_event.rb"
 
 module PubSub
-  def self.subscriber(pub_sub_options = {})
-    Module.new do
-      def self.included(klass)
-        Registry.instance.register_subscriber(pub_sub_options[:id] || klass.object_id, klass)
-      end
+  module Subscriber
+    def self.included(base)
+      base.class_eval do
+        def self.event_handlers
+          @event_handlers ||= {}
+        end
+  
+        def self.on(*event_classes, &block)
+          event_classes.each do |event_class|
+            event_handlers[event_class] = block
+          end
+        end
 
-      def self.extended(klass)
-        Registry.instance.register_subscriber(pub_sub_options[:id] || klass.object_id, klass)
+        def on_event(event)
+          event_handler = self.class.event_handlers[event.class]
+    
+          if event_handler.nil?
+            on_unhandled_event(event)
+          else
+            instance_exec(event, &event_handler)
+          end
+    
+          nil
+        end
+    
+        def on_unhandled_event(event)
+        end
       end
+    end
 
-      def pub_sub_id
-        pub_sub_options[:id] || klass.object_id
-      end
+    def self.extended(base)
+      base.class_eval do
+        def self.event_handlers
+          @event_handlers ||= {}
+        end
+  
+        def self.on(*event_classes, &block)
+          event_classes.each do |event_class|
+            event_handlers[event_class] = block
+          end
+        end
 
-      def on_event(event)
-        raise "Awaiting implementation"
+        def self.on_event(event)
+          event_handler = event_handlers[event.class]
+    
+          if event_handler.nil?
+            on_unhandled_event(event)
+          else
+            event_handler.call(event)
+          end
+    
+          nil
+        end
+    
+        def self.on_unhandled_event(event)
+        end
       end
     end
   end
