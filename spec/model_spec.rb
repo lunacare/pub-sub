@@ -138,7 +138,7 @@ RSpec.describe PubSub::ActiveRecord::Model do
     ])
   end
 
-  it "it reports changes" do
+  it "reports changes" do
     @test_model_class.add_subscriber(@test_subscriber)
     instance = @test_model_class.create!(name: "test")
     instance.update!(name: "test2")
