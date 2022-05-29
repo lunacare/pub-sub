@@ -2,8 +2,6 @@ require_relative "../subscriber.rb"
 require_relative "../publisher.rb"
 require_relative "events.rb"
 
-require "singleton"
-
 module PubSub
   module ActiveRecord
     module Changes
