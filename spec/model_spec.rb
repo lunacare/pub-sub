@@ -133,4 +133,29 @@ RSpec.describe PubSub::ActiveRecord::Model do
       "PubSub::ActiveRecord::Events::AfterCreateRollbackEvent"
     ])
   end
+
+  it "it reports changes" do
+    @test_model_class.changes_event_bus.add_subscriber(@test_subscriber)
+    instance = @test_model_class.create!(name: "test")
+    instance.update!(name: "test2")
+
+    # rollbacks don't get reported
+    @test_model_class.transaction do
+      @test_model_class.create!(name: "test")
+      raise ActiveRecord::Rollback
+    end
+
+    instance.destroy!
+
+    expect(@test_subscriber.received.map { |event| event.class.name }).to eq([
+      "PubSub::ActiveRecord::Events::CreateChangeEvent",
+      "PubSub::ActiveRecord::Events::UpdateChangeEvent",
+      "PubSub::ActiveRecord::Events::DestroyChangeEvent"
+    ])
+    expect(@test_subscriber.received.map { |event| event.payload[:changes] }).to eq([
+      {"id"=>[nil, 4], "name"=>[nil, "test"]},
+      {"name"=>["test", "test2"]},
+      nil
+    ])
+  end
 end
