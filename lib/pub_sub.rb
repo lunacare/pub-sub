@@ -1,7 +1,6 @@
 require_relative "pub_sub/version"
 require_relative "pub_sub/subscriber"
 require_relative "pub_sub/publisher"
-require_relative "pub_sub/class_forwarding"
 require_relative "pub_sub/bus"
 require_relative "pub_sub/base_event"
 require_relative "pub_sub/active_record/model"
