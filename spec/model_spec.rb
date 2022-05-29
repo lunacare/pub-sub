@@ -89,7 +89,6 @@ RSpec.describe PubSub::ActiveRecord::Model do
   end
 
   it "calls update callbacks" do
-    
     instance = @test_model_class.create!(name: "test")
     @test_model_class.add_subscriber(@test_subscriber)
     instance.update!(name: "test2")
