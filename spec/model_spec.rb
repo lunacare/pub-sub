@@ -83,11 +83,13 @@ RSpec.describe PubSub::ActiveRecord::Model do
       "PubSub::ActiveRecord::Events::AfterCreateEvent",
       "PubSub::ActiveRecord::Events::AfterSaveEvent",
       "PubSub::ActiveRecord::Events::AfterCommitEvent",
-      "PubSub::ActiveRecord::Events::AfterCreateCommitEvent"
+      "PubSub::ActiveRecord::Events::AfterCreateCommitEvent",
+      "PubSub::ActiveRecord::Events::CreateChangeEvent"
     ])
   end
 
   it "calls update callbacks" do
+    
     instance = @test_model_class.create!(name: "test")
     @test_model_class.add_subscriber(@test_subscriber)
     instance.update!(name: "test2")
@@ -99,7 +101,8 @@ RSpec.describe PubSub::ActiveRecord::Model do
       "PubSub::ActiveRecord::Events::AfterUpdateEvent",
       "PubSub::ActiveRecord::Events::AfterSaveEvent",
       "PubSub::ActiveRecord::Events::AfterCommitEvent",
-      "PubSub::ActiveRecord::Events::AfterUpdateCommitEvent"
+      "PubSub::ActiveRecord::Events::AfterUpdateCommitEvent",
+      "PubSub::ActiveRecord::Events::UpdateChangeEvent",
     ])
   end
 
@@ -111,7 +114,8 @@ RSpec.describe PubSub::ActiveRecord::Model do
       "PubSub::ActiveRecord::Events::BeforeDestroyEvent",
       "PubSub::ActiveRecord::Events::AfterDestroyEvent",
       "PubSub::ActiveRecord::Events::AfterCommitEvent",
-      "PubSub::ActiveRecord::Events::AfterDestroyCommitEvent"
+      "PubSub::ActiveRecord::Events::AfterDestroyCommitEvent",
+      "PubSub::ActiveRecord::Events::DestroyChangeEvent"
     ])
   end
 
@@ -135,7 +139,7 @@ RSpec.describe PubSub::ActiveRecord::Model do
   end
 
   it "it reports changes" do
-    @test_model_class.changes_event_bus.add_subscriber(@test_subscriber)
+    @test_model_class.add_subscriber(@test_subscriber)
     instance = @test_model_class.create!(name: "test")
     instance.update!(name: "test2")
 
@@ -146,6 +150,14 @@ RSpec.describe PubSub::ActiveRecord::Model do
     end
 
     instance.destroy!
+
+    @test_subscriber.received.select! do |event|
+      [
+        "PubSub::ActiveRecord::Events::CreateChangeEvent",
+        "PubSub::ActiveRecord::Events::UpdateChangeEvent",
+        "PubSub::ActiveRecord::Events::DestroyChangeEvent"
+      ].include?(event.class.name)
+    end
 
     expect(@test_subscriber.received.map { |event| event.class.name }).to eq([
       "PubSub::ActiveRecord::Events::CreateChangeEvent",

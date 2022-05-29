@@ -90,16 +90,30 @@ module PubSub
           def broadcast_after_create_commit
             broadcast_callback_event(Events::AfterCommitEvent)
             broadcast_callback_event(Events::AfterCreateCommitEvent)
+            broadcast(Events::CreateChangeEvent.new({
+              timestamp: self.try(:updated_at) || Time.now(),
+              id: self.id,
+              changes: self.previous_changes
+            }))
           end
     
           def broadcast_after_update_commit
             broadcast_callback_event(Events::AfterCommitEvent)
             broadcast_callback_event(Events::AfterUpdateCommitEvent)
+            broadcast(Events::UpdateChangeEvent.new({
+              timestamp: self.try(:updated_at) || Time.now(),
+              id: self.id,
+              changes: self.previous_changes
+            }))
           end
     
           def broadcast_after_destroy_commit
             broadcast_callback_event(Events::AfterCommitEvent)
             broadcast_callback_event(Events::AfterDestroyCommitEvent)
+            broadcast(Events::DestroyChangeEvent.new({
+              timestamp: self.try(:updated_at) || Time.now(),
+              id: self.id,
+            }))
           end
 
           def broadcast_after_create_rollback
