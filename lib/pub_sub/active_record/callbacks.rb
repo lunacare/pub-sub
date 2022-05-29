@@ -91,7 +91,7 @@ module PubSub
             broadcast_callback_event(Events::AfterCommitEvent)
             broadcast_callback_event(Events::AfterCreateCommitEvent)
             broadcast(Events::CreateChangeEvent.new({
-              timestamp: self.try(:updated_at) || Time.now(),
+              timestamp: self.try(:updated_at) || Time.current,
               id: self.id,
               changes: self.previous_changes
             }))
@@ -101,7 +101,7 @@ module PubSub
             broadcast_callback_event(Events::AfterCommitEvent)
             broadcast_callback_event(Events::AfterUpdateCommitEvent)
             broadcast(Events::UpdateChangeEvent.new({
-              timestamp: self.try(:updated_at) || Time.now(),
+              timestamp: self.try(:updated_at) || Time.current,
               id: self.id,
               changes: self.previous_changes
             }))
@@ -111,7 +111,7 @@ module PubSub
             broadcast_callback_event(Events::AfterCommitEvent)
             broadcast_callback_event(Events::AfterDestroyCommitEvent)
             broadcast(Events::DestroyChangeEvent.new({
-              timestamp: self.try(:updated_at) || Time.now(),
+              timestamp: self.try(:updated_at) || Time.current,
               id: self.id,
             }))
           end

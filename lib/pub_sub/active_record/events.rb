@@ -77,7 +77,7 @@ module PubSub
 
       class ChangeEvent < PubSub::BaseEvent
         def initialize(payload)
-          super({ timestamp: Time.now(), **payload })
+          super({ timestamp: Time.current, **payload })
         end
       end
 
