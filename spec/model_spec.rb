@@ -83,7 +83,8 @@ RSpec.describe PubSub::ActiveRecord::Model do
       "PubSub::ActiveRecord::Events::AfterCreateEvent",
       "PubSub::ActiveRecord::Events::AfterSaveEvent",
       "PubSub::ActiveRecord::Events::AfterCommitEvent",
-      "PubSub::ActiveRecord::Events::AfterCreateCommitEvent"
+      "PubSub::ActiveRecord::Events::AfterCreateCommitEvent",
+      "PubSub::ActiveRecord::Events::CreateChangeEvent"
     ])
   end
 
@@ -99,7 +100,8 @@ RSpec.describe PubSub::ActiveRecord::Model do
       "PubSub::ActiveRecord::Events::AfterUpdateEvent",
       "PubSub::ActiveRecord::Events::AfterSaveEvent",
       "PubSub::ActiveRecord::Events::AfterCommitEvent",
-      "PubSub::ActiveRecord::Events::AfterUpdateCommitEvent"
+      "PubSub::ActiveRecord::Events::AfterUpdateCommitEvent",
+      "PubSub::ActiveRecord::Events::UpdateChangeEvent",
     ])
   end
 
@@ -111,7 +113,8 @@ RSpec.describe PubSub::ActiveRecord::Model do
       "PubSub::ActiveRecord::Events::BeforeDestroyEvent",
       "PubSub::ActiveRecord::Events::AfterDestroyEvent",
       "PubSub::ActiveRecord::Events::AfterCommitEvent",
-      "PubSub::ActiveRecord::Events::AfterDestroyCommitEvent"
+      "PubSub::ActiveRecord::Events::AfterDestroyCommitEvent",
+      "PubSub::ActiveRecord::Events::DestroyChangeEvent"
     ])
   end
 
@@ -131,6 +134,39 @@ RSpec.describe PubSub::ActiveRecord::Model do
       "PubSub::ActiveRecord::Events::AfterSaveEvent",
       "PubSub::ActiveRecord::Events::AfterRollbackEvent",
       "PubSub::ActiveRecord::Events::AfterCreateRollbackEvent"
+    ])
+  end
+
+  it "reports changes" do
+    @test_model_class.add_subscriber(@test_subscriber)
+    instance = @test_model_class.create!(name: "test")
+    instance.update!(name: "test2")
+
+    # rollbacks don't get reported
+    @test_model_class.transaction do
+      @test_model_class.create!(name: "test")
+      raise ActiveRecord::Rollback
+    end
+
+    instance.destroy!
+
+    @test_subscriber.received.select! do |event|
+      [
+        "PubSub::ActiveRecord::Events::CreateChangeEvent",
+        "PubSub::ActiveRecord::Events::UpdateChangeEvent",
+        "PubSub::ActiveRecord::Events::DestroyChangeEvent"
+      ].include?(event.class.name)
+    end
+
+    expect(@test_subscriber.received.map { |event| event.class.name }).to eq([
+      "PubSub::ActiveRecord::Events::CreateChangeEvent",
+      "PubSub::ActiveRecord::Events::UpdateChangeEvent",
+      "PubSub::ActiveRecord::Events::DestroyChangeEvent"
+    ])
+    expect(@test_subscriber.received.map { |event| event.payload[:changes] }).to eq([
+      {"id"=>[nil, 4], "name"=>[nil, "test"]},
+      {"name"=>["test", "test2"]},
+      nil
     ])
   end
 end

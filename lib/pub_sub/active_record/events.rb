@@ -4,6 +4,9 @@ module PubSub
   module ActiveRecord
     module Events
       class CallbackEvent < PubSub::BaseEvent
+        def initialize(payload)
+          super({ timestamp: Time.current, **payload })
+        end
       end
 
       class AfterInitializeEvent < CallbackEvent
@@ -70,6 +73,21 @@ module PubSub
       end
 
       class AfterDestroyRollbackEvent < AfterRollbackEvent
+      end
+
+      class ChangeEvent < PubSub::BaseEvent
+        def initialize(payload)
+          super({ timestamp: Time.current, **payload })
+        end
+      end
+
+      class CreateChangeEvent < ChangeEvent
+      end
+
+      class UpdateChangeEvent < ChangeEvent
+      end
+
+      class DestroyChangeEvent < ChangeEvent
       end
     end
   end
