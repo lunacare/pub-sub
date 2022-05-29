@@ -4,25 +4,13 @@ require_relative "publisher.rb"
 module PubSub
   module Bus
     def self.included(base)
-      base.class_eval do
-        include PubSub::Subscriber
-        include PubSub::Publisher
-
-        def on_event(...)
-          broadcast(...)
-        end
-      end
+      base.include PubSub::Subscriber
+      base.include PubSub::Publisher
     end
 
     def self.extended(base)
-      base.class_eval do
-        extend PubSub::Subscriber
-        extend PubSub::Publisher
-
-        def self.on_event(...)
-          broadcast(...)
-        end
-      end
+      base.extend PubSub::Subscriber
+      base.extend PubSub::Publisher
     end
   end
 end

@@ -26,15 +26,27 @@ RSpec.describe PubSub::Bus do
 
     class ClassForwardingBus
       extend PubSub::Bus
+
+      def self.on_event(...)
+        broadcast(...)
+      end
     end
 
     class InstanceForwardingBus
       include PubSub::Bus
+
+      def on_event(...)
+        broadcast(...)
+      end
     end
 
     class SingletonForwardingBus
       include Singleton
       include PubSub::Bus
+
+      def on_event(...)
+        broadcast(...)
+      end
     end
 
     class DoublingBus
