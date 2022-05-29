@@ -1,6 +1,5 @@
 require_relative "../bus.rb"
 require_relative "../publisher.rb"
-require_relative "../class_forwarding.rb"
 require_relative "events.rb"
 
 module PubSub
