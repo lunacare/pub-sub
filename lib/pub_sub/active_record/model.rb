@@ -11,6 +11,10 @@ module PubSub
         base.include PubSub::Publisher
         base.prepend PubSub::ClassForwarding
         base.include PubSub::ActiveRecord::Callbacks
+
+        def base.on_event(...)
+          broadcast(...)
+        end
       end
     end
   end
