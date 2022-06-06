@@ -1,6 +1,3 @@
-require "sidekiq"
-require "yaml"
-
 module PubSub
   module AsyncSubscriber
     def self.included(base)
