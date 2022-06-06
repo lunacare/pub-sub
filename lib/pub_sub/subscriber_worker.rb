@@ -15,6 +15,11 @@ module PubSub
           alias :on_event_sync :on_event
     
           def on_event(event)
+            p "called proxy on_event"
+            p "calling perform_async with", {
+              "event_class_name" => event.class.name,
+              "payload" => event.payload
+            }
             perform_async({
               "event_class_name" => event.class.name,
               "payload" => event.payload
@@ -23,6 +28,7 @@ module PubSub
         end
 
         def perform(args)
+          p "called perform"
           self.class.on_event_sync(Object.const_get(args["event_class_name"]).new(args["payload"]))
         end
       end
