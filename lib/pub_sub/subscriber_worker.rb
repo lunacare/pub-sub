@@ -1,5 +1,4 @@
-require "sidekiq"
-require "yaml"
+require "json"
 
 module PubSub
   module AsyncSubscriber
@@ -15,14 +14,15 @@ module PubSub
           alias :on_event_sync :on_event
     
           def on_event(event)
-            perform_async({
+            perform_async(JSON.dump({
               "event_class_name" => event.class.name,
               "payload" => event.payload
-            })
+            }))
           end
         end
 
-        def perform(args)
+        def perform(serialized_args)
+          args = JSON.parse(serialized_args)
           self.class.on_event_sync(Object.const_get(args["event_class_name"]).new(args["payload"]))
         end
       end
