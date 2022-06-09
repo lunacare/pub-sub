@@ -1,3 +1,5 @@
+require "json"
+
 module PubSub
   module AsyncSubscriber
     def self.included(base)
@@ -12,20 +14,15 @@ module PubSub
           alias :on_event_sync :on_event
     
           def on_event(event)
-            p "called proxy on_event"
-            p "calling perform_async with", {
+            perform_async(JSON.dump({
               "event_class_name" => event.class.name,
               "payload" => event.payload
-            }
-            perform_async({
-              "event_class_name" => event.class.name,
-              "payload" => event.payload
-            })
+            }))
           end
         end
 
-        def perform(args)
-          p "called perform"
+        def perform(serialized_args)
+          args = JSON.parse(serialized_args)
           self.class.on_event_sync(Object.const_get(args["event_class_name"]).new(args["payload"]))
         end
       end
